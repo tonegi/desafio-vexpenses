@@ -258,7 +258,7 @@ resource "aws_instance" "debian_ec2" {
   }
 ```
 
-Assim, para permitir a conexão à internet, foi alterado o valor em `map_public_ip_on_launch`, permitindo a conexão através da sub-rede
+Assim, foi alterado o valor em `map_public_ip_on_launch`, permitindo a conexão através da sub-rede
 
 ```hcl
 resource "aws_subnet" "main_subnet" {
