@@ -24,6 +24,7 @@ O código define o provedor AWS na região `us-east-1`, localizada no Norte da V
 provider "aws" {
   region = "us-east-1"
 }
+```
 
 ## Variáveis
 O código define duas variáveis para personalizar o nome dos recursos:
@@ -42,3 +43,4 @@ variable "candidato" {
   type        = string
   default     = "SeuNome"
 }
+```
