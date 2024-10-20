@@ -54,7 +54,7 @@ resource "tls_private_key" "ec2_key" {
 }
 ```
 
-###Par de Chaves AWS
+### Par de Chaves AWS
 O par de chaves é gerado usando a chave pública derivada da chave privada criada anteriormente:
 
 ```hcl
@@ -64,8 +64,8 @@ resource "aws_key_pair" "ec2_key_pair" {
 }
 ```
 
-###VPC (Virtual Private Cloud)
-A VPC é a rede virtual onde os recursos serão provisionados:
+### VPC 
+Criação de uma versão virtual de uma rede física:
 
 ```hcl
 resource "aws_vpc" "main_vpc" {
