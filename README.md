@@ -125,7 +125,7 @@ resource "aws_route_table" "main_route_table" {
 }
 ```
 ### Associação da Route Table
-Realiza a ssoiação da route table às sub-redes, permitindo-as o devido acesso à internet:
+Realiza a assoiação da route table às sub-redes, permitindo-as o devido acesso à internet:
 
 ```hcl
 resource "aws_route_table_association" "main_association" {
@@ -166,3 +166,111 @@ resource "aws_security_group" "main_sg" {
   }
 }
 ```
+
+AMI
+Configura a AMI com o Debian 12, utilizando seu ID específico:
+
+```hcl
+data "aws_ami" "debian12" {
+  most_recent = true
+  filter {
+    name   = "name"
+    values = ["debian-12-amd64-*"]
+  }
+  owners = ["679593333241"]
+}
+```
+
+### Instância EC2
+Provisona uma instância EC2 t2.micro utilizando a AMI do Debian 12 e associando o grupo de segurança, par de chaves e sub-rede configurados. Além disso, associa um endereço IP público e define um script de inicialização para atualizar a máquina:
+
+```hcl
+resource "aws_instance" "debian_ec2" {
+  ami           = data.aws_ami.debian12.id
+  instance_type = "t2.micro"
+  subnet_id     = aws_subnet.main_subnet.id
+  key_name      = aws_key_pair.ec2_key_pair.key_name
+  security_groups = [aws_security_group.main_sg.name]
+
+  associate_public_ip_address = true
+
+  root_block_device {
+    volume_size = 20
+  }
+
+  user_data = <<-EOF
+              #!/bin/bash
+              apt-get update -y
+              apt-get upgrade -y
+              EOF
+
+  tags = {
+    Name = "${var.projeto}-${var.candidato}-ec2"
+  }
+}
+```
+
+### Output
+Exibe a chave privada gerada e o endereço de IP público do EC2:
+
+```hcl
+output "private_key" {
+  description = "Chave privada para acessar a instância EC2"
+  value       = tls_private_key.ec2_key.private_key_pem
+  sensitive   = true
+}
+
+output "ec2_public_ip" {
+  description = "Endereço IP público da instância EC2"
+  value       = aws_instance.debian_ec2.public_ip
+}
+```
+
+## Modificação e Melhoria do Código Terraform 
+
+### 1. Alteração no valor da variável `candidato`
+
+```hcl
+variable "candidato" {
+  description = "Nome do candidato"
+  type        = string
+  default     = "RafaelTonegi"
+}
+```
+
+### 2. Remoção do IP público
+Realizada a alteração no valor booleano em `associate_public_ip_address` de `true` para `false`. 
+
+```hcl 
+resource "aws_instance" "debian_ec2" {
+  ami             = data.aws_ami.debian12.id
+  instance_type   = "t2.micro"
+  subnet_id       = aws_subnet.main_subnet.id
+  key_name        = aws_key_pair.ec2_key_pair.key_name
+  security_groups = [aws_security_group.main_sg.name]
+
+  associate_public_ip_address = false 
+
+  root_block_device {
+    volume_size           = 20
+    volume_type           = "gp2"
+    delete_on_termination = true
+  }
+```
+
+Assim, para permitir a conexão à internet, foi alterado o valor em `map_public_ip_on_launch`, permitindo a conexão através da sub-rede
+
+```hcl
+resource "aws_subnet" "main_subnet" {
+  vpc_id            = aws_vpc.main_vpc.id
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = "us-east-1a"
+
+  map_public_ip_on_launch = true 
+
+  tags = {
+    Name = "${var.projeto}-${var.candidato}-subnet"
+  }
+}
+```
+
