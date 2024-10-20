@@ -26,7 +26,7 @@ provider "aws" {
 }
 ```
 
-## Variáveis
+### Variáveis
 O código define duas variáveis para a identificação dos recursos:
 - `projeto`: Nome do projeto (padrão: `"VExpenses"`).
 - `candidato`: Nome do candidato/usuário (padrão: `"SeuNome"`).
@@ -44,12 +44,37 @@ variable "candidato" {
   default     = "SeuNome"
 }
 ```
-## Geração da Chave Privada TLS
+### Geração da Chave Privada
 Cria uma chave privada de 2048 bits que será usada para acessar a instância EC2 através de acesso remoto:
 
 ```hcl
 resource "tls_private_key" "ec2_key" {
   algorithm = "RSA"
   rsa_bits  = 2048
+}
+```
+
+###Par de Chaves AWS
+O par de chaves é gerado usando a chave pública derivada da chave privada criada anteriormente:
+
+```hcl
+resource "aws_key_pair" "ec2_key_pair" {
+  key_name   = "${var.projeto}-${var.candidato}-key"
+  public_key = tls_private_key.ec2_key.public_key_openssh
+}
+```
+
+###VPC (Virtual Private Cloud)
+A VPC é a rede virtual onde os recursos serão provisionados:
+
+```hcl
+resource "aws_vpc" "main_vpc" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = "${var.projeto}-${var.candidato}-vpc"
+  }
 }
 ```
