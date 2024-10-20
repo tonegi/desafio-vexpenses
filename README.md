@@ -167,7 +167,7 @@ resource "aws_security_group" "main_sg" {
 }
 ```
 
-AMI
+### AMI
 Configura a AMI com o Debian 12, utilizando seu ID específico:
 
 ```hcl
