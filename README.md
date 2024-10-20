@@ -44,7 +44,7 @@ variable "candidato" {
   default     = "SeuNome"
 }
 ```
-### Geração da Chave Privada
+### Chave Privada
 Cria uma chave privada de 2048 bits que será usada para acessar a instância EC2 através de acesso remoto:
 
 ```hcl
@@ -54,7 +54,7 @@ resource "tls_private_key" "ec2_key" {
 }
 ```
 
-### Par de Chaves AWS
+### Par de Chaves
 O par de chaves é gerado usando a chave pública derivada da chave privada criada anteriormente:
 
 ```hcl
@@ -94,7 +94,7 @@ resource "aws_subnet" "main_subnet" {
 }
 ```
 
-### Internet Gateway
+### Gateway
 Configuração do tráfego de entrada e saída de rede do VPC para a internet:
 
 ```hcl
@@ -121,6 +121,48 @@ resource "aws_route_table" "main_route_table" {
 
   tags = {
     Name = "${var.projeto}-${var.candidato}-route_table"
+  }
+}
+```
+### Associação da Route Table
+Realiza a ssoiação da route table às sub-redes, permitindo-as o devido acesso à internet:
+
+```hcl
+resource "aws_route_table_association" "main_association" {
+  subnet_id      = aws_subnet.main_subnet.id
+  route_table_id = aws_route_table.main_route_table.id
+
+  tags = {
+    Name = "${var.projeto}-${var.candidato}-route_table_association"
+  }
+}
+```
+
+### Security Group
+Criação de um grupo de segurança no qual permite o acesso remoto pela porta convencional 22 e atuando no tráfego de saída do EC2:
+
+```hcl
+resource "aws_security_group" "main_sg" {
+  name        = "${var.projeto}-${var.candidato}-sg"
+  description = "Permitir SSH de qualquer lugar e todo o tráfego de saída"
+  vpc_id      = aws_vpc.main_vpc.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.projeto}-${var.candidato}-sg"
   }
 }
 ```
