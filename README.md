@@ -19,8 +19,26 @@ O código provisiona uma infraestrutura na região `us-east-1` da AWS com os seg
 ## Componentes
 
 ### Provedor AWS
-O código define o provedor AWS na região `us-east-1`:
+O código define o provedor AWS na região `us-east-1`, localizada no Norte da Virgínia:
 ```hcl
 provider "aws" {
   region = "us-east-1"
+}
+
+## Variáveis
+O código define duas variáveis para personalizar o nome dos recursos:
+- `projeto`: Nome do projeto (padrão: `"VExpenses"`).
+- `candidato`: Nome do candidato/usuário (padrão: `"SeuNome"`).
+
+```hcl
+variable "projeto" {
+  description = "Nome do projeto"
+  type        = string
+  default     = "VExpenses"
+}
+
+variable "candidato" {
+  description = "Nome do candidato"
+  type        = string
+  default     = "SeuNome"
 }
