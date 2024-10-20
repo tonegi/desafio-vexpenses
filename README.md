@@ -27,7 +27,7 @@ provider "aws" {
 ```
 
 ## Variáveis
-O código define duas variáveis para personalizar o nome dos recursos:
+O código define duas variáveis para a identificação dos recursos:
 - `projeto`: Nome do projeto (padrão: `"VExpenses"`).
 - `candidato`: Nome do candidato/usuário (padrão: `"SeuNome"`).
 
@@ -42,5 +42,14 @@ variable "candidato" {
   description = "Nome do candidato"
   type        = string
   default     = "SeuNome"
+}
+```
+## Geração da Chave Privada TLS
+Cria uma chave privada de 2048 bits que será usada para acessar a instância EC2 através de acesso remoto:
+
+```hcl
+resource "tls_private_key" "ec2_key" {
+  algorithm = "RSA"
+  rsa_bits  = 2048
 }
 ```
