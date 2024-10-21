@@ -370,7 +370,7 @@ Foi configurada a instalação do Nginx na instância EC2 e, visando uma maior s
 ```
 
 ### Acesso ao arquivo modificado
-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+[Código Modificado](modificado.tf)
 
 
   ## Utilização
@@ -389,7 +389,6 @@ terraform init
 3. Visualize e aplique o plano de execução:
 
 ```bash
-Copiar código
 terraform plan
 terraform apply
 ```
