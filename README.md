@@ -172,7 +172,7 @@ data "aws_ami" "debian12" {
 ```
 
 ### Instância EC2
-Cria-se uma instância EC2 t2.micro utilizando a imagem do Debian e se associando ao security group, ao par de chaves e à sub-rede em que estão configurados. Além disso, associa um endereço IP público e é definido um script de inicialização para atualizar a máquina:
+Cria-se uma instância EC2 t2.micro utilizando a imagem do Debian e se associando ao security group, ao par de chaves e à sub-rede em que estão configurados. também, associa um endereço IP público e é definido um script de inicialização:
 
 ```hcl
 resource "aws_instance" "debian_ec2" {
