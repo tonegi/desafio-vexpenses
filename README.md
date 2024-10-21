@@ -273,4 +273,61 @@ resource "aws_subnet" "main_subnet" {
   }
 }
 ```
+### 3. Criação de sub-redes em outras zonas de disponibilizade
+Considerando a possibilidade de oscilação na zonas de disponibilidade, cria-se sub-redes em outras disposições; sendo essas a `us-east-1b` e `us-east-1c`.
 
+```hcl
+resource "aws_subnet" "main_subnet_b" {
+  vpc_id            = aws_vpc.main_vpc.id
+  cidr_block        = "10.0.2.0/24" # Mudança na sub-rede
+  availability_zone = "us-east-1b" # Mudança na zona de disponibilidade
+
+  tags = {
+    Name = "${var.projeto}-${var.candidato}-subnet-b"
+  }
+}
+
+resource "aws_subnet" "main_subnet_c" {
+  vpc_id            = aws_vpc.main_vpc.id
+  cidr_block        = "10.0.3.0/24" # Mudança na sub-rede
+  availability_zone = "us-east-1c" # Mudança na zona de disponibilidade
+
+  tags = {
+    Name = "${var.projeto}-${var.candidato}-subnet-c"
+  }
+}
+```
+### 4. Criação de novas regras de entrada 
+Em relação à versão anterior, a regra de entrada permitia o acesso remoto provindo de qualquer IP e utilizando a porta de SSH padrão, facilitando a possibilidade de uma intrusão. Assim, foi alterada a porta de entrada para uma não-convencional, assim como - sendo apenas um exemplo - a permissão de acesso vindo do meu IP; além de utilizar a máscara de sub-rede `/128` que oferece acesso apenas ao meu específico endereço.
+
+```hcl
+ ingress {
+    description      = "Allow SSH from specific location"
+    from_port        = 6000 # Mudança na porta de entrada
+    to_port          = 6000 # Mudança na porta de saída
+    protocol         = "tcp"
+    cidr_blocks      = ["177.140.144.245/128"] # Inibição da conexão de qualquer IPv4 
+    ipv6_cidr_blocks = ["2804:14c:123:9fba:e5ea:4e49:8a54:43fc/128"] # Inibição da conexão de qualquer IPv6
+  }
+```
+
+Aqui, seguindo a mesma lógica, filtrou a regra de entrada para conexões à internet ao permitir acesso às portas HTTP e HTTPS.
+
+```hcl
+
+  ingress {
+  description      = "Allow HTTP traffic"
+  from_port        = 80 # Permitir acesso à Internet
+  to_port          = 80 # Permitir acesso à Internet
+  protocol         = "tcp"
+  cidr_blocks      = ["0.0.0.0/0"]  
+}
+
+ingress {
+  description      = "Allow HTTPS traffic"
+  from_port        = 443 # Permitir acesso à internet
+  to_port          = 443 # Permitir acesso à internet
+  protocol         = "tcp"
+  cidr_blocks      = ["0.0.0.0/0"]  
+}
+```
