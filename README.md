@@ -1,25 +1,15 @@
 # Desafio VExpenses - Terraform
 
-Este projeto utiliza o Terraform para provisionar e configurar uma infraestrutura básica na AWS, criando uma instância EC2 Debian, com uma VPC, sub-rede, gateway de internet, grupos de segurança e outros recursos de rede. A seguir, uma explicação detalhada de todos os componentes configurados.
+O desafio tem como objetivo a configuração de uma infraestrutura da AWS, criando uma instância EC2 utilizando Debian e com uma VPC, uma sub-rede, um gateway, um security group e a possibilidade de acesso remoto.
 
 ## Requisitos
-- Conta AWS com permissões para criar VPC, sub-rede, EC2, gateway de internet, etc.
-- Terraform instalado.
+- Conta AWS.
+- Terraform.
 
-## Descrição Geral
-O código provisiona uma infraestrutura na região `us-east-1` da AWS com os seguintes componentes:
-- **VPC**: Rede virtual para isolar a instância EC2.
-- **Sub-rede**: Rede específica dentro da VPC.
-- **Internet Gateway**: Permite o tráfego de entrada/saída da Internet.
-- **Tabela de Rotas**: Define a rota para a Internet.
-- **Grupo de Segurança**: Controla as regras de tráfego para a instância EC2.
-- **Instância EC2 Debian**: Uma máquina virtual que roda Debian 12.
-- **Chave SSH**: Par de chaves para acesso seguro à instância EC2.
-
-## Componentes
+## Análise Técnica do Código Terraform
 
 ### Provedor AWS
-O código define o provedor AWS na região `us-east-1`, localizada no Norte da Virgínia:
+Define-se o provedor AWS na região `us-east-1`, localizada no Norte da Virgínia:
 ```hcl
 provider "aws" {
   region = "us-east-1"
@@ -27,7 +17,7 @@ provider "aws" {
 ```
 
 ### Variáveis
-O código define duas variáveis para a identificação dos recursos:
+É estabelecido a utilização de duas variáveis para a identificação dos recursos:
 - `projeto`: Nome do projeto (padrão: `"VExpenses"`).
 - `candidato`: Nome do candidato/usuário (padrão: `"SeuNome"`).
 
@@ -45,7 +35,7 @@ variable "candidato" {
 }
 ```
 ### Chave Privada
-Cria uma chave privada de 2048 bits que será usada para acessar a instância EC2 através de acesso remoto:
+Criação de uma chave privada de 2048 bits que será usada para acessar a instância EC2 remotamente:
 
 ```hcl
 resource "tls_private_key" "ec2_key" {
@@ -55,7 +45,7 @@ resource "tls_private_key" "ec2_key" {
 ```
 
 ### Par de Chaves
-O par de chaves é gerado usando a chave pública derivada da chave privada criada anteriormente:
+O par de chaves é gerado usando a chave pública proveniente da chave privada criada anteriormente:
 
 ```hcl
 resource "aws_key_pair" "ec2_key_pair" {
@@ -182,7 +172,7 @@ data "aws_ami" "debian12" {
 ```
 
 ### Instância EC2
-Provisona uma instância EC2 t2.micro utilizando a AMI do Debian 12 e associando o grupo de segurança, par de chaves e sub-rede configurados. Além disso, associa um endereço IP público e define um script de inicialização para atualizar a máquina:
+Cria-se uma instância EC2 t2.micro utilizando a imagem do Debian e se associando ao security group, ao par de chaves e à sub-rede em que estão configurados. Além disso, associa um endereço IP público e é definido um script de inicialização para atualizar a máquina:
 
 ```hcl
 resource "aws_instance" "debian_ec2" {
@@ -330,4 +320,96 @@ ingress {
   protocol         = "tcp"
   cidr_blocks      = ["0.0.0.0/0"]  
 }
+```
+### 5. Criação de novas regras de saída 
+Assim como nas regras de entrada, filtra-se a possibilidade da saída de dados para qualquer outra porta ou IP.
+
+```hcl
+egress {
+    description      = "Allow HTTP outbound"
+    from_port        = 80 # Permitir acesso à internet
+    to_port          = 80 # Permitir acesso à internet
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+}
+
+egress {
+    description      = "Allow HTTPS outbound"
+    from_port        = 443 # Permitir acesso à internet
+    to_port          = 443 # Permitir acesso à internet
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+}
+
+  tags = {
+    Name = "${var.projeto}-${var.candidato}-sg"
+  }
+}
+```
+
+### 6. Instalação no Nginx e do Fail2Ban
+Foi configurada a instalação do Nginx na instância EC2 e, visando uma maior segurança contra ataques de brute force, a instalação do Fail2Ban no `user_data`.
+
+```hcl
+  user_data = <<-EOF
+              #!/bin/bash
+              apt-get update -y
+              apt-get upgrade -y
+              apt-get install fail2ban # Instalação Fail2Ban
+              apt-get install nginx -y # Instalação do Nginx
+              systemctl start nginx
+              systemctl enable nginx
+              EOF
+
+  tags = {
+    Name = "${var.projeto}-${var.candidato}-ec2"
+  }
+}
+```
+
+### Acesso ao arquivo modificado
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+  ## Utilização
+
+1. Clone este repositório:
+```bash
+git clone https://github.com/tonegi/desafio-vexpenses.git
+cd desafio-vexpenses
+```
+
+2. Inicie o Terraform:
+```bash
+terraform init
+```
+
+3. Visualize e aplique o plano de execução:
+
+```bash
+Copiar código
+terraform plan
+terraform apply
+```
+
+4. Confirme a criação e digitando `yes` quando solicitado.
+Após a conclusão, o Terraform mostrará a `private_key` e o `ec2_public_ip`
+
+### Acesso ao EC2
+1. Para acessar o EC2, copie o IP público supracitado:
+```bash
+terraform output xxx.xxx.xxx.xxx/xxx
+```
+
+2. Salve a chave privada fornecida pelo Terraform:
+```bash
+echo "$(terraform output sua_chave)" > chave.pem
+chmod 400 chave.pem
+```
+
+3. Conecte-se à instância via SSH:
+```bash
+ssh -i chave.pem admin@<ip_do_EC2>
 ```
