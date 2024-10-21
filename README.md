@@ -115,7 +115,7 @@ resource "aws_route_table" "main_route_table" {
 }
 ```
 ### Associação da Route Table
-Realiza a assoiação da route table às sub-redes, permitindo-as o devido acesso à internet:
+Realiza a associação da route table às sub-redes, permitindo-as o devido acesso à internet:
 
 ```hcl
 resource "aws_route_table_association" "main_association" {
